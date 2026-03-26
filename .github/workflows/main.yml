@@ -1,0 +1,49 @@
+name: Super Realistic 70 Days Activity
+
+on:
+  workflow_dispatch:
+
+jobs:
+  backdate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Create 70 Days Activity
+        run: |
+          # Sizning emailingiz va ismingiz sozlandi
+          git config --local user.email "zarnigorkamilova85@gmail.com"
+          git config --local user.name "zarnigor"
+          
+          for i in {70..1}
+          do
+            # Hafta kunini aniqlaymiz (1-5 ish kunlari, 6-7 dam olish)
+            DAY_OF_WEEK=$(date -d "$i days ago" +%u)
+            CHANCE=$((RANDOM % 100))
+            
+            # Haqiqiy hayot mantiqi:
+            # Ish kunlari: 65% ehtimol bilan yashil bo'ladi
+            # Dam olish kunlari: 15% ehtimol bilan (juda kam)
+            THRESHOLD=35
+            if [ $DAY_OF_WEEK -ge 6 ]; then THRESHOLD=85; fi
+
+            if [ $CHANCE -gt $THRESHOLD ]; then
+                # Ranglar har xil bo'lishi uchun 1 dan 15 gacha random commit
+                RANDOM_COUNT=$((1 + RANDOM % 15))
+                
+                for j in $(seq 1 $RANDOM_COUNT)
+                do
+                  D=$(date -d "$i days ago" +%Y-%m-%dT%H:%M:%S)
+                  # Har safar yangi matn yozamiz
+                  echo "Update for $D - Rand: $RANDOM" > activity.txt
+                  git add activity.txt
+                  GIT_AUTHOR_DATE="$D" GIT_COMMITTER_DATE="$D" git commit -m "Fixing module $j on $D"
+                done
+            fi
+          done
+          
+          # Hamma o'tmishdagi commitlarni bittada yuboramiz
+          git push origin main --force
